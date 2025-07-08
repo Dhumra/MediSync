@@ -8,16 +8,16 @@ In this project, you'll build a **fault-tolerant, replicated healthcare microser
 
 Healthcare IT systems often suffer from:
 
-- High latency in scheduling
-- Fragile inventory coordination
+- High latency in scheduling  
+- Fragile inventory coordination  
 - Downtime due to centralized failures
 
 To solve these challenges, you will build a **distributed healthcare backend** using **Python 3.11+**, **gRPC**, **Redis**, and **PostgreSQL**, with modern architecture features:
 
-- Microservices
-- Caching with invalidation
-- Leader-based replication and failover
-- Service discovery and orchestration
+- Microservices  
+- Caching with invalidation  
+- Leader-based replication and failover  
+- Service discovery and orchestration  
 
 This system will consist of several independently deployable microservices, running as Docker containers, and deployed on AWS.
 
@@ -44,9 +44,9 @@ To reduce latency during high-load appointment lookups, the system implements **
 
 ✅ **Caching Flow:**
 
-1. `frontend-service` makes a gRPC call to `appointment-service`.
-2. `appointment-service` checks **in-memory LRU cache** (`functools.lru_cache` or similar).
-3. If not found, it checks **Redis cache** (`aioredis`).
+1. `frontend-service` makes a gRPC call to `appointment-service`.  
+2. `appointment-service` checks **in-memory LRU cache** (`functools.lru_cache` or similar).  
+3. If not found, it checks **Redis cache** (`aioredis`).  
 4. If still missing, it queries PostgreSQL, returns results, and updates both caches.
 
 ✅ **Cache Invalidation:**
@@ -69,14 +69,14 @@ The `inventory-service` is replicated across multiple clinics with **one leader 
 
 ✅ **Replication Flow:**
 
-- `frontend-service` identifies the leader at startup (manual config or Redis key).
-- All write operations (stock deductions) go through the leader.
-- Leader propagates writes to followers via gRPC broadcast.
+- `frontend-service` identifies the leader at startup (manual config or Redis key).  
+- All write operations (stock deductions) go through the leader.  
+- Leader propagates writes to followers via gRPC broadcast.  
 - Each replica uses its own PostgreSQL DB for persistence.
 
 ✅ **Bootstrapping:**
 
-- Each replica starts with a unique ID.
+- Each replica starts with a unique ID.  
 - Leader selection can be:
   - Manual config (e.g., `LEADER_ID=1`), or
   - Redis key with TTL (automatic leader election).
@@ -112,15 +112,28 @@ To maintain high availability:
 
 ✅ **Local Testing:**
 
-- **Unit testing:** `pytest` for all microservices.
-- **Integration testing:** Postman or `curl` for REST APIs.
-- **gRPC testing:** `grpclib.testing`.
+- **Unit testing:** `pytest` for all microservices.  
+- **Integration testing:** Postman or `curl` for REST APIs.  
+- **gRPC testing:** `grpclib.testing`.  
 - **Load testing:** `k6` or `Locust` for concurrency simulations.
+
+✅ **Concurrency Testing:**
+
+The system supports **multi-user simulation with concurrent access** via Python threading:
+
+- The `client-service` uses `threading` to simulate parallel appointment booking attempts.  
+- Helps test:
+  - Booking conflict resolution
+  - Cache race conditions
+  - Thread-safe DB operations
+- Useful for validating that:
+  - Only one user can book a slot
+  - Caches remain consistent under race
 
 ✅ **Deployment:**
 
-- Local: `docker-compose up --build`
-- Cloud: Fly.io or Render (`fly launch`)
+- Local: `docker-compose up --build`  
+- Cloud: Fly.io, Render, or AWS (manual or CI/CD)  
 - Each microservice runs in its own container with environment-based configs.
 
 ---
@@ -129,10 +142,11 @@ To maintain high availability:
 
 Measure and demonstrate:
 
-- Average slot query time with and without caching.
-- Failover time when leader crashes.
-- Consistent state replication after recovery.
-- LRU cache evictions (sample logs).
+- Average slot query time with and without caching  
+- Failover time when leader crashes  
+- Consistent state replication after recovery  
+- LRU cache evictions (sample logs)  
+- Multi-threaded test logs showing thread-safe booking
 
 ---
 
@@ -140,9 +154,9 @@ Measure and demonstrate:
 
 Implement a **Raft-style consensus protocol** to:
 
-- Guarantee strong consistency in stock replication.
-- Ensure all replicas apply updates in the same order.
-- Support automatic leader election without manual intervention.
+- Guarantee strong consistency in stock replication  
+- Ensure all replicas apply updates in the same order  
+- Support automatic leader election without manual intervention
 
 ---
 
@@ -156,10 +170,10 @@ Implement a **Raft-style consensus protocol** to:
 | Caching               | Redis (`aioredis`) + in-memory LRU                 | Fast reads, TTLs, invalidation                                           |
 | Replication Queue     | Redis Streams or RabbitMQ (`aio-pika`)             | Async replication and eventing                                           |
 | Service Discovery     | Redis TTL registry or Consul                       | Simple TTL-based leader tracking; scalable for production                |
-| Orchestration         | Docker Compose (local), Fly.io or AWS for deployment | Easy containerization and scaling                                        |
+| Orchestration         | Docker Compose (local), Fly.io or AWS              | Easy containerization and scaling                                        |
 | Monitoring (optional) | Prometheus + Grafana or stdout logs                | Observe gRPC metrics, cache hit rates, and errors                        |
 | Testing               | `pytest`, `grpclib.testing`, Postman               | Comprehensive unit and integration testing                               |
-| Load Testing          | `k6` CLI                                           | Simulate load and concurrency for performance validation                |
+| Load Testing          | `k6`, `Locust`, or threaded CLI scripts            | Simulate load and concurrency for performance validation                |
 
 ---
 
@@ -170,7 +184,7 @@ Implement a **Raft-style consensus protocol** to:
 | `README.md`          | Project overview, setup, and test instructions                |
 | `docker-compose.yml` | Service orchestration for local deployment                    |
 | `proto/`             | `.proto` definitions for all gRPC services                    |
-| `test/`              | Unit and integration test scripts                             |
+| `test/`              | Unit, integration, and concurrency test scripts               |
 | `logs/`              | Sample logs demonstrating cache eviction and failover         |
 | `deployment/`        | Scripts for Fly.io or AWS deployment                          |
 
@@ -178,6 +192,4 @@ Implement a **Raft-style consensus protocol** to:
 
 ## ✅ How to Present (Resume / Portfolio)
 
-> Designed a fault-tolerant microservice system for healthcare scheduling and medication distribution using Python 3.11+, gRPC APIs, Redis-backed caching, and leader-based replication. Implemented automatic failover and recovery workflows to achieve high availability and low-latency responses under load.
-
-
+> Designed a fault-tolerant microservice system for healthcare scheduling and medication distribution using Python 3.11+, gRPC APIs, Redis-backed caching, and leader-based replication. Implemented automatic failover and recovery workflows, with multithreaded testing to ensure consistency under concurrent access.
